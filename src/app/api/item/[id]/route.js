@@ -31,6 +31,7 @@ export async function GET(req, { params }) {
         })
     }
 }
+
 export async function PATCH(req, { params }) {
     const { id } = await params;
     const data = await req.json(); //assume that it contain part of data...
@@ -80,6 +81,31 @@ export async function PUT(req, { params }) {
             status: 200,
             headers: corsHeaders
         })
+    }
+    catch (exception) {
+        console.log("exception", exception.toString());
+        const errorMsg = exception.toString();
+        return NextResponse.json({
+            message: errorMsg
+        }, {
+            status: 400,
+            headers: corsHeaders
+        })
+    }
+}
+
+export async function DELETE(req, { params }) {
+    const { id } = await params;
+    try {
+        const client = await getClientPromise();
+        const db = client.db("wad-01");
+        const deletedResult = await db.collection("item").deleteOne({
+            _id: new ObjectId(id)
+        });
+        return NextResponse.json(deletedResult, {
+            status: 200,
+            headers: corsHeaders
+        });
     }
     catch (exception) {
         console.log("exception", exception.toString());
