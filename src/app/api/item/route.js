@@ -8,7 +8,6 @@ export async function OPTIONS(req) {
         headers: corsHeaders,
     });
 }
-
 export async function GET() {
     const headers = {
         "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
@@ -22,7 +21,7 @@ export async function GET() {
         const result = await db.collection("item").find({}).toArray();
         console.log("==> result", result);
         return NextResponse.json(result, {
-            headers: corsHeaders
+            headers: headers
         });
     }
     catch (exception) {
@@ -36,7 +35,6 @@ export async function GET() {
         })
     }
 }
-
 export async function POST(req) {
     const data = await req.json();
     const itemName = data.name;
@@ -69,5 +67,18 @@ export async function POST(req) {
         })
     }
 }
-
-
+export async function DELETE(req, { params }) {
+  try {
+    const client = await getClientPromise();
+    const db = client.db("wad-01");
+    const { id } = params;
+    const result = await db.collection("user").deleteOne({ _id: new ObjectId(id) });
+    if (result.deletedCount === 0) {
+      return NextResponse.json({ message: "User not found" }, { status: 404, headers: corsHeaders });
+    }
+    return NextResponse.json({ deletedCount: result.deletedCount }, { headers: corsHeaders });
+  } catch (err) {
+    console.log("DELETE user exception", err?.toString?.() || err);
+    return NextResponse.json({ message: err?.toString?.() || "Error" }, { status: 400, headers: corsHeaders });
+  }
+}

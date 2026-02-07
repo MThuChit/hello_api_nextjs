@@ -1,13 +1,9 @@
 import corsHeaders from "@/lib/cors";
-import {
-    getClientPromise
-} from "@/lib/mongodb";
+import { getClientPromise } from "@/lib/mongodb";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import {
-    NextResponse
-} from "next/server";
-const JWT_SECRET = process.env.JWT_SECRET || "mydefaultjwtsecret"; // Use astrong secret in production
+import { NextResponse } from "next/server";
+const JWT_SECRET = process.env.JWT_SECRET || "mydefaultjwtsecret"; // Use a strong secret in production
 export async function OPTIONS(req) {
     return new Response(null, {
         status: 200,
@@ -16,10 +12,7 @@ export async function OPTIONS(req) {
 }
 export async function POST(req) {
     const data = await req.json();
-    const {
-        email,
-        password
-    } = data;
+    const { email, password } = data;
     if (!email || !password) {
         return NextResponse.json({
             message: "Missing email or password"
@@ -31,9 +24,7 @@ export async function POST(req) {
     try {
         const client = await getClientPromise();
         const db = client.db("wad-01");
-        const user = await db.collection("user").findOne({
-            email
-        });
+        const user = await db.collection("user").findOne({ email });
         if (!user) {
             return NextResponse.json({
                 message: "Invalid email or password"
@@ -56,9 +47,7 @@ export async function POST(req) {
             id: user._id,
             email: user.email,
             username: user.username
-        }, JWT_SECRET, {
-            expiresIn: "7d"
-        });
+        }, JWT_SECRET, { expiresIn: "7d" });
         // Set JWT as HTTP-only cookie
         const response = NextResponse.json({
             message: "Login successful"

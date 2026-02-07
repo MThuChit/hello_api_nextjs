@@ -1,7 +1,5 @@
 import corsHeaders from "@/lib/cors";
-import {
-    NextResponse
-} from "next/server";
+import { NextResponse } from "next/server";
 export async function OPTIONS(req) {
     return new Response(null, {
         status: 200,
@@ -16,13 +14,12 @@ export async function POST() {
         status: 200,
         headers: corsHeaders
     });
-    response.cookies.set("token",
-        "", {
-            httpOnly: true,
-            sameSite: "lax",
-            path: "/",
-            maxAge: 0,
-            secure: process.env.NODE_ENV === "production"
-        });
+    response.cookies.set("token", "", {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        maxAge: 0,
+        secure: process.env.NODE_ENV === "production"
+    });
     return response;
 }
