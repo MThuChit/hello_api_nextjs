@@ -1,21 +1,60 @@
 import jwt from "jsonwebtoken";
-import { NextResponse } from "next/server";
-import cookie from "cookie";
-const JWT_SECRET = process.env.JWT_SECRET || "mydefaulyjwtsecret"; // Use a strong secret in production
+import { ObjectId } from "mongodb";
+
+const JWT_SECRET = process.env.JWT_SECRET || "mydefaultjwtsecret";
+
 export function verifyJWT(req) {
-    try {
-        const cookies = req.headers.get("cookie") || "";
-        const { token } = cookie.parse(cookies);
-        if (!token) {
-            return null;
-        }
-        const decoded = jwt.verify(token, JWT_SECRET);
-        return decoded;
-    } catch (err) {
-        return null;
-    }
+  try {
+    const cookieHeader = req.headers.get("cookie") || "";
+    const token = cookieHeader
+      .split(";")
+      .map((c) => c.trim())
+      .find((c) => c.startsWith("token="))
+      ?.split("=")[1];
+    if (!token) return null;
+    const decoded = jwt.verify(token, JWT_SECRET);
+    return decoded;
+  } catch (e) {
+    return null;
+  }
 }
-// Example usage in an API route:
-// import { verifyJWT } from "@/lib/auth";
-// const user = verifyJWT(req);
-// if (!user) return NextResponse.json({ message: "Unauthorized" }, { status: 401});
+
+export function signJWT(payload, options = { expiresIn: "7d" }) {
+  return jwt.sign(payload, JWT_SECRET, options);
+}
+
+function normalizeTokenId(id) {
+  if (!id) return null;
+
+  if (typeof id === "string" && ObjectId.isValid(id)) {
+    return new ObjectId(id);
+  }
+
+  if (typeof id === "object") {
+    if (typeof id.$oid === "string" && ObjectId.isValid(id.$oid)) {
+      return new ObjectId(id.$oid);
+    }
+
+    if (typeof id.toString === "function") {
+      const maybeId = id.toString();
+      if (ObjectId.isValid(maybeId)) {
+        return new ObjectId(maybeId);
+      }
+    }
+  }
+
+  return null;
+}
+
+export function getUserFilterFromToken(tokenPayload) {
+  const idFilter = normalizeTokenId(tokenPayload?.id);
+  if (idFilter) {
+    return { _id: idFilter };
+  }
+
+  if (tokenPayload?.email) {
+    return { email: tokenPayload.email };
+  }
+
+  return null;
+}
